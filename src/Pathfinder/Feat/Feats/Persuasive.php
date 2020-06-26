@@ -2,7 +2,7 @@
 
 namespace Pathfinder\Feat\Feats;
 
-use \Pathfinder\Feat\Feat;
+use Pathfinder\Feat\Feat;
 
 class Persuasive extends Feat
 {

@@ -2,7 +2,7 @@
 
 namespace Pathfinder\Gear\Weapon\Weapons;
 
-use \Pathfinder\Gear\Weapon\Weapon;
+use Pathfinder\Gear\Weapon\Weapon;
 
 class Dagger extends Weapon
 {

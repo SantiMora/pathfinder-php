@@ -7,30 +7,7 @@ use Pathfinder\Utils\Traits\Nameable;
 
 abstract class CharacterClass
 {
-	use Nameable;
-
-	private $level = 0;
-
-	public function getLevel(): int
-    {
-        return $this->level;
-    }
-
-    public function getBaseAttackBonus(): int
-    {
-        return floor($this->level * $this::BAB);
-    }
-
-    public function getSavingThrow(string $st): int
-    {
-    	if (!in_array($st, ["FORTITUDE", "REFLEX", "WILL"])) 
-    		throw new \Exception("Not valid saving throw", 1);
-
-        $className = get_called_class();
-        $isHigh = constant("{$className}::{$st}");
-
-        return floor(($isHigh ? 2 : 0) + (($isHigh ? (1/2) : (1/3)) * $this->level));    
-    }
+    use Nameable;
 
 	// abstract-like properties
 	public const NAME = self::NAME;	
@@ -43,7 +20,30 @@ abstract class CharacterClass
 	public const CLASS_SKILLS = self::CLASS_SKILLS;
 	public const PROFICIENCIES = self::PROFICIENCIES;
 
-    public function levelUp(Character $character, ...$arguments): void
+    private $level = 0;
+
+    public function getLevel(): int
+    {
+        return $this->level;
+    }
+
+    public function getBaseAttackBonus(): int
+    {
+        return floor($this->level * $this::BAB);
+    }
+
+    public function getSavingThrow(string $st): int
+    {
+        if (!in_array($st, ["FORTITUDE", "REFLEX", "WILL"])) 
+            throw new \Exception("Not valid saving throw", 1);
+
+        $className = get_called_class();
+        $isHigh = constant("{$className}::{$st}");
+
+        return floor(($isHigh ? 2 : 0) + (($isHigh ? (1/2) : (1/3)) * $this->level));    
+    }
+
+    public function levelUp(Character $character, ... $arguments): void
     {
     	$this->level++; 
     	$levelMethod = "__lv{$this->level}";

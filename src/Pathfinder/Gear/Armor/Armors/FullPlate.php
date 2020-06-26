@@ -2,7 +2,7 @@
 
 namespace Pathfinder\Gear\Armor\Armors;
 
-use \Pathfinder\Gear\Armor\Armor;
+use Pathfinder\Gear\Armor\Armor;
 
 class FullPlate extends Armor
 {

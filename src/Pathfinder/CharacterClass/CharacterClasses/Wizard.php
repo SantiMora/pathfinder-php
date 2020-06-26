@@ -2,7 +2,7 @@
 
 namespace Pathfinder\CharacterClass\CharacterClasses;
 
-use \Pathfinder\CharacterClass\CharacterClass;
+use Pathfinder\CharacterClass\CharacterClass;
 
 class Wizard extends CharacterClass
 {

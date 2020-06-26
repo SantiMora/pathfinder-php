@@ -11,6 +11,7 @@ use Pathfinder\Utils\Traits\Featable;
 use Pathfinder\Race\Race;
 use Pathfinder\CharacterClass\CharacterClass;
 use Pathfinder\Feat\Feat;
+use Pathfinder\Utils\Dice;
 
 class Character 
 {
@@ -64,6 +65,9 @@ class Character
     ];
 
     private $name, $alignment, $abilityScores, $race, $favouriteClass, $classes = [];
+    private $HDs = [];
+    private $additionalHP = 0;
+    private $skillRanks = [];
 
     public function __construct($name, $alignment, $abilityScores, $race, $favouriteClass, ... $levelFeatures)
     {
@@ -74,10 +78,94 @@ class Character
         $this->setFavouriteClass($favouriteClass);
         $this->addLevel(... $levelFeatures); // see addLevel function arguments
     }
-
-    public function __toString(): string
+    
+    public function addLevel(CharacterClass $classLevel, string $favouriteClassBonus = null, Feat $feat = null, array $skillRanks,string $abilityScoreToIncrease = null, ... $classFeatures): void
     {
-        return $this->shortPrint();
+        $targetLevel = $this->getLevel() + 1;
+
+        // 1. increase stat if any
+        if ($targetLevel % 4 == 0 && ! isset($abilityScoreToIncrease)) 
+            throw new \Exception("No ability score to increase defined", 1);
+        elseif ($targetLevel % 4 != 0 && isset($abilityScoreToIncrease))
+            throw new \Exception("You can't increase an ability score at this level", 1);
+        elseif (isset($abilityScoreToIncrease)) 
+            $this->increaseAbilityScore($abilityScoreToIncrease);
+
+        // 2. Apply feat if any
+        if ($targetLevel % 2 == 1 && ! isset($feat)) 
+            throw new \Exception("No feat selected", 1);
+        elseif ($targetLevel % 2 == 0 && isset($feat)) 
+            throw new \Exception("You can't select a feat, it's not an odd level", 1);
+        elseif (isset($feat))
+            $this->addFeat($feat);
+
+        // 3. Apply favourite class bonus if any
+        $isFavouriteClass = $this->checkFavouriteClass($classLevel);
+        $additionalRank = false;
+
+        if ($isFavouriteClass && ! isset($favouriteClassBonus))
+            throw new \Exception("You have to select a favourite class bonus", 1);
+        elseif (! $isFavouriteClass && isset($favouriteClassBonus)) 
+            throw new \Exception("You can't select a favourite class bonus, it's not {$this->getName()}'s favourite class", 1);
+        elseif (isset($favouriteClassBonus)) {
+            if ($favouriteClassBonus == "HP")
+                $this->additionalHP++;
+            elseif ($favouriteClassBonus == "RANK")
+                $additionalRank = true;
+            else 
+                throw new \Exception("Not valid class bonus", 1);
+        }
+
+        // 4. apply class features
+        $this->HDs[] = $targetLevel == 1 ? $classLevel::HD : Dice::roll("d".$classLevel::HD);
+
+        $findClass = array_filter($this->classes, function ($class) use ($classLevel) {
+            return $classLevel instanceof $class;
+        });
+
+        if (count($findClass) > 0) 
+            list($classLevel) = array_values($findClass);
+        else 
+            $this->classes[] = $classLevel;
+
+        // Apply specific level function  (see Pathfinder\CharacterClass\CharacterClass::levelUp)
+        $classLevel->levelUp($this, ... $classFeatures);
+
+        // 5. apply skill ranks
+        $rankCount = 0;
+        $maxRanks = $classLevel::SKILL_RANKS_PER_LEVEL + $this->getAbilityScoreBonus("intelligence") + ($additionalRank ? 1 : 0);
+
+        // 'skilled' human trait
+        if ($this->race instanceof \Pathfinder\Race\Races\Human)
+            $maxRanks++;
+
+        foreach ($skillRanks as $skill => $ranks) {
+
+            if (! in_array($skill, array_keys(self::SKILLS))) 
+                throw new \Exception("Not valid skill: '{$skill}'", 1);
+            if (! is_numeric($ranks))
+                throw new \Exception("Not valid skill rank", 1);
+
+            $isClassSkill = in_array($skill, $this->getClassSkills());
+
+            if (! $isClassSkill && $ranks % 2 == 1) 
+                throw new \Exception("You can't assign a half rank to '{$skill}'", 1);
+                
+            if (! isset($this->skillRanks[$skill]))
+                $this->skillRanks[$skill] = 0;
+            
+            $this->skillRanks[$skill] += $isClassSkill ? $ranks : $ranks / 2;
+
+            if ($this->skillRanks[$skill] > $this->getLevel())
+                throw new \Exception("You can't have ranks greater than your level ('{$skill}')", 1);
+
+            $rankCount += $ranks;
+        }
+
+        if ($rankCount > $maxRanks) 
+            throw new \Exception("You have assigned more ranks than you can ({$rankCount}/{$maxRanks})", 1);
+        if ($rankCount < $maxRanks)
+            throw new \Exception("You haven't assigned all your ranks ({$rankCount}/{$maxRanks}), check again ", 1);
     }
 
     /** Stat-related functions **/
@@ -386,109 +474,6 @@ class Character
         return $this->getAbilityScoreBonus('strength') + $this->getBaseAttackBonus();
     }
 
-    private $HDs = [];
-    private $additionalHP = 0;
-    private $skillRanks = [];
-    private $inventory = [];
-	
-    public function addLevel(
-        CharacterClass $classLevel, 
-        string $favouriteClassBonus = null, 
-        Feat $feat = null, 
-        array $skillRanks,
-        string $statToIncrease = null, 
-        ... $classFeatures
-    ): void
-    {
-    	$targetLevel = $this->getLevel() + 1;
-
-    	// 1. increase stat if any
-		if ($targetLevel % 4 == 0 && ! isset($statToIncrease)) 
-            throw new \Exception("Not stat to increase defined", 1);
-        elseif ($targetLevel % 4 != 0 && isset($statToIncrease))
-        	throw new \Exception("You can't increase a stat at this level", 1);
-        elseif ($targetLevel % 4 == 0 && ! in_array($statToIncrease, self::STATS))
-        	throw new \Exception("Not valid stat to increase", 1);
-    	elseif (isset($statToIncrease)) 
-    		$this->increaseAbilityScore($statToIncrease);
-
-    	// 2. Apply feat if any
-    	if ($targetLevel % 2 == 1 && ! isset($feat)) 
-			throw new \Exception("There is no feat selected", 1);
-		elseif ($targetLevel % 2 == 0 && isset($feat)) 
-			throw new \Exception("You can't select a feat, it's not an odd level", 1);
-    	elseif (isset($feat))
-    		$this->addFeat($feat);
-
-    	// 3. Apply favourite class bonus if any
-    	$isFavouriteClass = $this->checkFavouriteClass($classLevel);
-    	$additionalRank = false;
-
-    	if ($isFavouriteClass && ! isset($favouriteClassBonus))
-    		throw new \Exception("You have to select a favourite class bonus", 1);
-    	elseif (! $isFavouriteClass && isset($favouriteClassBonus)) 
-    		throw new \Exception("You can't select a favourite class bonus, this is not your favourite class", 1);
-    	elseif (isset($favouriteClassBonus)) {
-    		if ($favouriteClassBonus == "HP")
-    			$this->additionalHP++;
-    		elseif ($favouriteClassBonus == "rank")
-    			$additionalRank = true;
-            else 
-                throw new \Exception("Not valid class bonus", 1);
-    	}
-
-    	// 4. apply class features
-    	$this->HDs[] = $targetLevel == 1 ? $classLevel::HD : rand(1, $classLevel::HD);
-
-    	$findClass = array_filter($this->classes, function ($class) use ($classLevel) {
-            return $classLevel instanceof $class;
-        });
-
-    	if (count($findClass) > 0) 
-            list($classLevel) = array_values($findClass);
-        else 
-            $this->classes[] = $classLevel;
-
-        // Apply specific level function 
-        $classLevel->levelUp($this, ...$classFeatures);
-
-    	// 5. apply skill ranks
-        $rankCount = 0;
-        $maxRanks = $classLevel::SKILL_RANKS_PER_LEVEL + $this->getAbilityScoreBonus("intelligence") + ($additionalRank ? 1 : 0);
-
-        // 'skilled' human trait
-        if ($this->race instanceof \Pathfinder\Race\Races\Human)
-        	$maxRanks++;
-
-        foreach ($skillRanks as $skill => $ranks) {
-
-        	if (! in_array($skill, array_keys(self::SKILLS))) 
-        		throw new \Exception("Not valid skill: '{$skill}'", 1);
-    		if (! is_numeric($ranks))
-    			throw new \Exception("Not valid skill rank", 1);
-
-    		$isClassSkill = in_array($skill, $this->getClassSkills());
-
-    		if (! $isClassSkill && $ranks % 2 == 1) 
-    			throw new \Exception("You can't assign a half rank to '{$skill}'", 1);
-    			
-    		if (! isset($this->skillRanks[$skill]))
-    			$this->skillRanks[$skill] = 0;
-    		
-    		$this->skillRanks[$skill] += $isClassSkill ? $ranks : $ranks / 2;
-
-    		if ($this->skillRanks[$skill] > $this->getLevel())
-    			throw new \Exception("You can't have ranks greater than your level ('{$skill}')", 1);
-
-    		$rankCount += $ranks;
-        }
-
-        if ($rankCount > $maxRanks) 
-        	throw new \Exception("You have assigned more ranks than you can ({$rankCount}/{$maxRanks})", 1);
-        if ($rankCount < $maxRanks)
-        	throw new \Exception("You haven't assigned all your ranks ({$rankCount}/{$maxRanks}), check again ", 1);
-    }
-
     /* print functions */
     public function shortPrint(): string
     {
@@ -616,5 +601,10 @@ class Character
 
         echo "\n\n\t----------------------------------------------------------------------------------\n\n";
        
+    }
+
+    public function __toString(): string
+    {
+        return $this->shortPrint();
     }
 }

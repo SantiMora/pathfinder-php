@@ -2,7 +2,7 @@
 
 namespace Pathfinder\Gear\Shield\Shields;
 
-use \Pathfinder\Gear\Shield\Shield;
+use Pathfinder\Gear\Shield\Shield;
 
 class LightWoodenShield extends Shield
 {

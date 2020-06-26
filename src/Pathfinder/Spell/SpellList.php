@@ -1,6 +1,6 @@
 <?php
 
-namespace Pathfinder\Core;
+namespace Pathfinder\Spell;
 
 abstract class SpellList
 {

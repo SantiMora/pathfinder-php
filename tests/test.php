@@ -1,11 +1,17 @@
 <?php 
 
-require "../vendor/autoload.php";
+require __DIR__."/../vendor/autoload.php";
 
 echo "\n\n\n";
 
+
+//print_r(Pathfinder\Utils\Dice::multipleRoll("4d6", "5d4"));
+
+
+//die();
+
+
 $race = new Pathfinder\Race\Races\Elf("M", 68);
-$race->setName("Elfo del sur");
 
 $pj = new \Pathfinder\Character(
 	"Pepe",

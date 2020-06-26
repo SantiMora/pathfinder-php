@@ -16,7 +16,7 @@ trait Alignable
 			$alignment = "NN";
 		}
 
-		if (preg_match("/^[LNC][GNE]$/", $alignment) !== false) {
+		if (preg_match("/^[LNC][GNE]$/", $alignment)) {
 			$this->alignment = $alignment;
 		} else {
 			throw new Exception("Not valid alignment", 1);
@@ -25,7 +25,7 @@ trait Alignable
 
 	public function checkAlignment(string $pattern): bool
 	{
-		return preg_match($pattern, $this->alignment) !== false;
+		return preg_match($pattern, $this->alignment) != false;
 	}
 
 	public function isLawful(): bool

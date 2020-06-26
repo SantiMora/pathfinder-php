@@ -2,7 +2,7 @@
 
 namespace Pathfinder\CharacterClass\PrestigeClasses;
 
-use \Pathfinder\CharacterClass\PrestigeClass;
+use Pathfinder\CharacterClass\PrestigeClass;
 
 class EldritchKnight extends PrestigeClass
 {

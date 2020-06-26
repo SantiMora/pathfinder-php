@@ -2,9 +2,9 @@
 
 namespace Pathfinder\Gear\Armor;
 
-use \Pathfinder\Character;
-use \Pathfinder\Utils\Traits\Nameable;
-use \Pathfinder\Utils\Traits\Enchantable;
+use Pathfinder\Character;
+use Pathfinder\Utils\Traits\Nameable;
+use Pathfinder\Utils\Traits\Enchantable;
 
 abstract class Armor 
 {

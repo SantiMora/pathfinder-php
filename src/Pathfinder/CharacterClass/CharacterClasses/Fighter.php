@@ -2,9 +2,9 @@
 
 namespace Pathfinder\CharacterClass\CharacterClasses;
 
-use \Pathfinder\Character;
-use \Pathfinder\CharacterClass\CharacterClass;
-use \Pathfinder\Feat\Feat;
+use Pathfinder\Character;
+use Pathfinder\CharacterClass\CharacterClass;
+use Pathfinder\Feat\Feat;
 
 class Fighter extends CharacterClass
 {

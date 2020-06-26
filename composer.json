@@ -1,12 +1,12 @@
 {
-	"name": "SantiMora/pathfinder",
-	"description": "pathfinder library for character mechanics", 
-	"require": {
-		"php": ">=7.2.0"
-	},
-	"autoload": {
-		"psr-4": {
-			"Pathfinder\\": "src/Pathfinder/"
-		}
-	}
+  "name": "santimora/pathfinder",
+  "description": "pathfinder library for character mechanics", 
+  "require": {
+    "php": ">=7.2.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "Pathfinder\\": "src/Pathfinder/"
+    }
+  }
 }

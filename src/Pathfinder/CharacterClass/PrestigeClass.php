@@ -2,7 +2,7 @@
 
 namespace Pathfinder\CharacterClass;
 
-use \Pathfinder\Character;
+use Pathfinder\Character;
 
 abstract class PrestigeClass extends CharacterClass
 {

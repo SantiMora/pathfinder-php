@@ -2,9 +2,9 @@
 
 namespace Pathfinder\Gear\Weapon;
 
-use \Pathfinder\Character;
-use \Pathfinder\Utils\Traits\Nameable;
-use \Pathfinder\Utils\Traits\Enchantable;
+use Pathfinder\Character;
+use Pathfinder\Utils\Traits\Nameable;
+use Pathfinder\Utils\Traits\Enchantable;
 
 // Weapons bitmask
 define("SIMPLE",        0b0000000000000001);

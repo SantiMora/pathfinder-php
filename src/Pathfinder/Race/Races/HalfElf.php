@@ -5,7 +5,7 @@ namespace Pathfinder\Race\Races;
 use Pathfinder\Race\Race;
 use Pathfinder\Character;
 use Pathfinder\CharacterClass\CharacterClass;
-use \Pathfinder\Feats\Feat\SkillFocus
+use Pathfinder\Feats\Feat\SkillFocus
 
 class HalfElf extends Race
 {
