@@ -2,16 +2,10 @@
 
 require __DIR__."/../vendor/autoload.php";
 
-echo "\n\n\n";
+use Pathfinder\{Race\Races, CharacterClass\CharacterClasses as Classes, Feat\Feats};
+use Pathfinder\Gear\{Armor\Armors, Weapon\Weapons, Shield\Shields};
 
-
-//print_r(Pathfinder\Utils\Dice::multipleRoll("4d6", "5d4"));
-
-
-//die();
-
-
-$race = new Pathfinder\Race\Races\Elf("M", 68);
+$race = new Races\Elf("M", 68);
 
 $pj = new \Pathfinder\Character(
 	"Pepe",
@@ -25,10 +19,10 @@ $pj = new \Pathfinder\Character(
         'charisma' => 9
 	],
 	$race,
-	new Pathfinder\CharacterClass\CharacterClasses\Fighter,
-	new Pathfinder\CharacterClass\CharacterClasses\Fighter,
+	new Classes\Fighter,
+	new Classes\Fighter,
 	"HP",
-	new Pathfinder\Feat\Feats\ImprovedInitiative,
+	new Feats\ImprovedInitiative,
 	[
 		"ride" => 1,
 		"swim" => 1,
@@ -36,11 +30,11 @@ $pj = new \Pathfinder\Character(
 		"craft" => 1
 	],  
     null,
-    new \Pathfinder\Feat\Feats\Endurance
+    new Feats\Endurance
 );
 
 $pj->addLevel(
-	new Pathfinder\CharacterClass\CharacterClasses\Fighter,
+	new Classes\Fighter,
 	"HP",
 	null,
 	[
@@ -52,8 +46,8 @@ $pj->addLevel(
     null
 );
 
-$pj->equipArmor(new Pathfinder\Gear\Armor\Armors\BandedMail);
-$pj->equipMainWeapon(new Pathfinder\Gear\Weapon\Weapons\LongSword);
-$pj->equipShield(new Pathfinder\Gear\Shield\Shields\LightWoodenShield);
+$pj->equipArmor(new Armors\BandedMail);
+$pj->equipMainWeapon(new Weapons\LongSword);
+$pj->equipShield(new Shields\LightWoodenShield);
 
 $pj->prettyPrint();

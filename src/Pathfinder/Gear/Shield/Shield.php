@@ -3,12 +3,11 @@
 namespace Pathfinder\Gear\Shield;
 
 use Pathfinder\Character;
-use Pathfinder\Utils\Traits\Nameable;
-use Pathfinder\Utils\Traits\Enchantable;
+use Pathfinder\Utils\Traits;
 
 abstract class Shield 
 {
-    use Nameable, Enchantable;   
+    use Traits\Nameable, Traits\Enchantable;   
 
     // abstract-like properties
 	public const NAME = self::NAME;

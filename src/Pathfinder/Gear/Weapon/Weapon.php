@@ -3,8 +3,7 @@
 namespace Pathfinder\Gear\Weapon;
 
 use Pathfinder\Character;
-use Pathfinder\Utils\Traits\Nameable;
-use Pathfinder\Utils\Traits\Enchantable;
+use Pathfinder\Utils\Traits;
 
 // Weapons bitmask
 define("SIMPLE",        0b0000000000000001);
@@ -26,7 +25,7 @@ define("FINESSE",       0b1000000000000000);
 
 abstract class Weapon 
 {
-	use Nameable, Enchantable;
+	use Traits\Nameable, Traits\Enchantable;
 
     // abstract-like properties
     // public const NAME = self::NAME;

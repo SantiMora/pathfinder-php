@@ -2,25 +2,22 @@
 
 namespace Pathfinder;
 
-// traits
-use Pathfinder\Utils\Traits\Nameable;
-use Pathfinder\Utils\Traits\Alignable;
-use Pathfinder\Utils\Traits\Equippable;
-use Pathfinder\Utils\Traits\Featable;
-
-use Pathfinder\Race\Race;
+use Pathfinder\Race\{Race, Races};
 use Pathfinder\CharacterClass\CharacterClass;
-use Pathfinder\Feat\Feat;
-use Pathfinder\Utils\Dice;
+use Pathfinder\Feat\{Feat, Feats};
+use Pathfinder\Utils\{Traits, Dice};
 
 class Character 
 {
-    use Nameable, Alignable, Equippable, Featable;
+    use Traits\Nameable, 
+        Traits\Alignable, 
+        Traits\Equippable, 
+        Traits\Featable;
 
     const ABILITY_SCORES = [
         'strength', 
         'dexterity', 
-        'constitution', 
+        'constitution',
         'intelligence', 
         'wisdom', 
         'charisma'
@@ -136,7 +133,7 @@ class Character
         $maxRanks = $classLevel::SKILL_RANKS_PER_LEVEL + $this->getAbilityScoreBonus("intelligence") + ($additionalRank ? 1 : 0);
 
         // 'skilled' human trait
-        if ($this->race instanceof \Pathfinder\Race\Races\Human)
+        if ($this->race instanceof Races\Human)
             $maxRanks++;
 
         foreach ($skillRanks as $skill => $ranks) {
@@ -312,7 +309,7 @@ class Character
 
                 $stSum += $this->getAbilityScoreBonus('constitution');
 
-                if ($this->hasFeat(new \Pathfinder\Feat\Feats\GreatFortitude))
+                if ($this->hasFeat(new Feats\GreatFortitude))
                     $stSum += 2;
 
                 break;
@@ -320,7 +317,7 @@ class Character
 
                 $stSum += $this->getAbilityScoreBonus('dexterity');
 
-                if ($this->hasFeat(new \Pathfinder\Feat\Feats\LightningReflexes))
+                if ($this->hasFeat(new Feats\LightningReflexes))
                     $stSum += 2;
 
                 break;
@@ -328,7 +325,7 @@ class Character
 
                 $stSum += $this->getAbilityScoreBonus('wisdom');
 
-                if ($this->hasFeat(new \Pathfinder\Feat\Feats\IronWill))
+                if ($this->hasFeat(new Feats\IronWill))
                     $stSum += 2;
         }
 
@@ -367,7 +364,7 @@ class Character
     /* other statistic-related functions */
     public function getInitiative (): int
     {
-        return $this->getAbilityScoreBonus('dexterity') + ($this->hasFeat(new \Pathfinder\Feat\Feats\ImprovedInitiative) ? 4 : 0);
+        return $this->getAbilityScoreBonus('dexterity') + ($this->hasFeat(new Feats\ImprovedInitiative) ? 4 : 0);
     }
 
     public function getMaxHitPoints(): int
@@ -376,7 +373,7 @@ class Character
         $total += $this->getLevel() * $this->getAbilityScoreBonus('constitution');
         $total += $this->additionalHP;
 
-        if ($this->hasFeat(new \Pathfinder\Feat\Feats\Endurance))
+        if ($this->hasFeat(new Feats\Endurance))
             $total += ($this->getLevel() < 3 ? 3 : $this->getLevel());
 
         return $total;
@@ -401,7 +398,7 @@ class Character
 
             $total += count($maxDexArr) > 0 && $desBonus > min($maxDexArr) ? min($maxDexArr) : $desBonus;
 
-            if ($this->hasFeat(new \Pathfinder\Feat\Feats\Dodge()))
+            if ($this->hasFeat(new Feats\Dodge()))
                 $total++;
         }
 
@@ -442,16 +439,16 @@ class Character
 
         // TODO apply feats and class traits
         $skillFeats = $this->searchFeats([
-            new \Pathfinder\Feat\Feats\Acrobatic,
-            new \Pathfinder\Feat\Feats\Alertness,
-            new \Pathfinder\Feat\Feats\AnimalAffinity,
-            new \Pathfinder\Feat\Feats\Athletic,
-            new \Pathfinder\Feat\Feats\Deceitful,
-            new \Pathfinder\Feat\Feats\DeftHands,
-            new \Pathfinder\Feat\Feats\MagicalAptitude,
-            new \Pathfinder\Feat\Feats\Persuasive,
-            new \Pathfinder\Feat\Feats\SelfSufficient,
-            new \Pathfinder\Feat\Feats\Stealthy
+            new Feats\Acrobatic,
+            new Feats\Alertness,
+            new Feats\AnimalAffinity,
+            new Feats\Athletic,
+            new Feats\Deceitful,
+            new Feats\DeftHands,
+            new Feats\MagicalAptitude,
+            new Feats\Persuasive,
+            new Feats\SelfSufficient,
+            new Feats\Stealthy
         ]);
 
         foreach ($skillFeats as $skillFeat) {
@@ -477,130 +474,108 @@ class Character
     /* print functions */
     public function shortPrint(): string
     {
-        $string = "♦ {$this->getName()} | {$this->race->getName()} ";
-        $string .= ["M" => "♂", "F" => "♀", "U" => ""][$this->race->getGender()]." | ";
-        $string .= $this->getClassList();
-        
-        return $string;
+        return sprintf(
+            "♦ %s | %s %s %s | %s", 
+            $this->getName(), 
+            $this->race->getName(), 
+            ["M" => "♂", "F" => "♀", "U" => ""][$this->race->getGender()],
+            $this->getAlignment(),
+            $this->getClassList()
+        );
     }
 
-    public function prettyPrint()
+    public function prettyPrint(int $leftColumnWidth = 48, int $rightColumnWidth = 32, $columnSpace = 3): void
     {
-        $mainWeapon = $this->getMainWeapon();
-        $offHandWeapon = $this->getOffHandWeapon();
-
-        $prints = [
-            "{$this->shortPrint()}\t\t",
-            "---------------------------------------------",
+        // General section
+        $general = [
+            $this->shortPrint(),
+            sprintf("%'-{$leftColumnWidth}s", ''),
             "",
-            "STR:\t{$this->getAbilityScore("strength")} ({$this->getAbilityScoreBonus('strength')})\t\tPG: {$this->getMaxHitPoints()}\t\t",
-            "DEX:\t{$this->getAbilityScore("dexterity")} ({$this->getAbilityScoreBonus('dexterity')})\t\tInnitiative: {$this->getInitiative()}\t",
-            "CON:\t{$this->getAbilityScore("constitution")} ({$this->getAbilityScoreBonus('constitution')})\t\tSpeed: ".$this->race::SPEED. "\t",
-            "INT:\t{$this->getAbilityScore("intelligence")} ({$this->getAbilityScoreBonus('intelligence')})\t\t\t\t",
-            "WIS:\t{$this->getAbilityScore("wisdom")} ({$this->getAbilityScoreBonus('wisdom')})\t\t\t\t",
-            "CHA:\t{$this->getAbilityScore("charisma")} ({$this->getAbilityScoreBonus('charisma')})\t\t\t\t",
-            "\t\t\t\t\t",
-            "-+- Defense ---------------------------------",
-            "\t\t\t\t\t",
-            "Fortitude:\t{$this->getSavingThrow('FORTITUDE')}\tAC:             {$this->getArmorClass()}",
-                //. ($this->getArmor() ? " ({$this->getArmor()->getName()} equipped)" : "")
-                //. ($this->getShield() ? " ({$this->getArmor()->getName()} equipped)" : ""),
-            "Reflex:\t\t{$this->getSavingThrow('REFLEX')}\tTouch AC:       {$this->getArmorClass(true)}",
-            "Will:\t\t{$this->getSavingThrow('WILL')}\tFlat-footed:    {$this->getArmorClass(false, true)}",
-            "\t\t\t\t\t",
-            "CMD: {$this->getCMD()}\t\t\t\t\t",
-            "\t\t\t\t\t",
-            "-+- Attack ----------------------------------",
-            "\t\t\t\t\t",
-            "Base Attack Bonus: {$this->getBaseAttackBonus()}\t\tCMB: {$this->getCMB()}\t",
-            "\t\t\t\t\t"
+            sprintf(
+                "STR [ %2s  -> %2s ]       PG          [ %s ]", $this->getAbilityScore("strength"), $this->getAbilityScoreBonus('strength'), $this->getMaxHitPoints()), 
+            sprintf("DEX [ %2s  -> %2s ]", $this->getAbilityScore("dexterity"), $this->getAbilityScoreBonus('dexterity')), 
+            sprintf("CON [ %2s  -> %2s ]       Innitiative [ %s ]", $this->getAbilityScore("constitution"), $this->getAbilityScoreBonus('constitution'), $this->getInitiative()), 
+            sprintf("INT [ %2s  -> %2s ]       Speed       [ %s' ]", $this->getAbilityScore("intelligence"), $this->getAbilityScoreBonus('intelligence'), $this->race::SPEED), 
+            sprintf("WIS [ %2s  -> %2s ]", $this->getAbilityScore("wisdom"), $this->getAbilityScoreBonus('wisdom')), 
+            sprintf("CHA [ %2s  -> %2s ]", $this->getAbilityScore("charisma"), $this->getAbilityScoreBonus('charisma'))
         ];
 
-        if ($mainWeapon) {
+        // Defense section
+        $defense = [
+            "", 
+            sprintf("%-'-{$leftColumnWidth}s", '-+ Defense '), 
+            "",
+            sprintf("Fortitude: [ %2s ]        AC:          [ %2s ]", $this->getSavingThrow('FORTITUDE'), $this->getArmorClass()),
+            sprintf("Reflex:    [ %2s ]        Touch AC:    [ %2s ]", $this->getSavingThrow('REFLEX'), $this->getArmorClass(true)),
+            sprintf("Will:      [ %2s ]        Flat-footed: [ %2s ]", $this->getSavingThrow('WILL'), $this->getArmorClass(false, true)),
+            "",
+            sprintf("CMD:       [ %s ] ", $this->getCMD())
+        ];
 
-            $weaponName = implode("", array_replace(
-                str_split("                 "),
-                str_split($mainWeapon->getName())
+        // Attack section
+        $attack = [
+            "", 
+            sprintf("%-'-{$leftColumnWidth}s", '-+ Attack '), 
+            "",
+            sprintf("Base Attack bonus: %s CMB: %s", $this->getBaseAttackBonus(), $this->getCMB()),
+            ""
+        ];
+
+        if ($mainWeapon = $this->getMainWeapon()) {
+            array_push($attack, sprintf(
+                "%s %s %s %s", 
+                $mainWeapon->getName(), 
+                $mainWeapon->getBonus($this),
+                $mainWeapon->getDamage($this),
+                $mainWeapon->getCritical($this)
             ));
-
-            $criticalString = implode("", array_replace(
-                str_split("          "),
-                str_split($mainWeapon->getCritical($this))
-            ));
-
-            $prints[] = "\e[1m· {$weaponName}\e[22m    {$mainWeapon->getBonus($this)}  {$mainWeapon->getDamage($this)}  {$criticalString}";
         }
         
-        if ($offHandWeapon) {
-
-            $weaponName = implode("", array_replace(
-                str_split("                "),
-                str_split($offHandWeapon->getName())
+        if ($offHandWeapon = $this->getOffHandWeapon()) {
+            array_push($attack, sprintf(
+                "· %s %s %s %s", 
+                $offHandWeapon->getName(), 
+                $offHandWeapon->getBonus($this),
+                $offHandWeapon->getDamage($this),
+                $offHandWeapon->getCritical($this)
             ));
-
-            $criticalString = implode("", array_replace(
-                str_split("          "),
-                str_split($offHandWeapon->getCritical($this))
-            ));
-
-            $prints[] = "\e[1m· {$offHandWeapon}\e[22m    {$offHandWeapon->getBonus($this)}    {$offHandWeapon->getDamage($this)}  {$criticalString}";
         }
 
-        $prints = array_merge($prints, [
-            "\t\t\t\t\t",
-            "-+- Feats -----------------------------------",
-            "\t\t\t\t\t",
-        ]);
+        // Feats section
+        $feats = ["", sprintf("%-'-{$leftColumnWidth}s", '-+ Feats '), ""];
 
         foreach ($this->feats as $feat) {
-            $prints[] = implode("", array_replace(
-                str_split("                                            "),
-                str_split($feat->getName())
-            ));
+            array_push($feats, $feat->getName());
         }
 
-        $prints = array_merge($prints, [
-            "\t\t\t\t\t",
-            "-+- Class traits & special ------------------",
-            "\t\t\t\t\t",
-        ]);
+        // TODO class traits
+        // TODO spells
+        // TODO Race traits
+        // TODO full inventory
 
-        // TODO print class traits
-        // TODO print race traits
-
-        $skillPrints = ["-+- Skills -----------------------", ""];
-        $offset = 1 ;
+        
+        // Skills section
+        $skills = ["", sprintf("%-'-{$rightColumnWidth}s", '-+ Skills '), ""];
+        $skillNameLength = $rightColumnWidth - 3;
 
         foreach (self::SKILLS as $skill => $properties) {
-
-            $skillName = implode("", array_replace(
-                str_split("                            "),
-                str_split($skill.": ")
-            ));
-
-            $skillBonus = strrev(implode("", array_replace(
-                str_split("  "),
-                str_split(strrev($this->getSkillBonus($skill))
-            ))));
-
-            $skillPrints[] = "· {$skillName}  {$skillBonus}";
+            array_push($skills, sprintf("%-{$skillNameLength}s%3s", $skill, $this->getSkillBonus($skill)));
         }
 
-        for ($i = count($prints); $i < count($skillPrints) + $offset; $i++) 
-            $prints[] = "\t\t\t\t\t";
+        // merge columns and print
+        $leftPrints = array_merge($general, $defense, $attack, $feats);
+        $rightPrints = $skills;
+        $lineLength = $leftColumnWidth + $columnSpace + $rightColumnWidth;
 
-        foreach ($prints as $key => $print) {
+        printf("\n\t%'-{$lineLength}s\n", "");
 
-            echo "\n\t".$print;
-
-            if ($key >= $offset) 
-                echo "\t".$skillPrints[$key - $offset];
+        for ($i = 0; $i < max(count($leftPrints), count($rightPrints)); $i++) {
+            printf("\t%-{$leftColumnWidth}s", $leftPrints[$i] ?? "");
+            printf("%{$columnSpace}s", "");
+            printf("%-{$rightColumnWidth}s\n", $rightPrints[$i] ?? "");
         }
 
-        // TODO print spells
-
-        echo "\n\n\t----------------------------------------------------------------------------------\n\n";
-       
+        printf("\n\t%'-{$lineLength}s\n\n", "");
     }
 
     public function __toString(): string

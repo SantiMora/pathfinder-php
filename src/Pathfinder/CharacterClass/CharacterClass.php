@@ -10,7 +10,7 @@ abstract class CharacterClass
     use Nameable;
 
 	// abstract-like properties
-	public const NAME = self::NAME;	
+    public const NAME = self::NAME;	
 	public const HD = self::HD;
 	public const BAB = self::BAB;
 	public const FORTITUDE = self::FORTITUDE;
